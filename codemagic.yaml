@@ -18,7 +18,7 @@ workflows:
           flutter --version
           flutter config --no-analytics
 
-          # পুরানো android ফোল্ডার রিমুভ করে নতুন প্ল্যাটফর্ম ফাইল তৈরি করুন
+          # নতুন v2 embedding সহ অ্যান্ড্রয়েড ফোল্ডার তৈরি
           rm -rf android
           flutter create . --org com.ashik --project-name ashik_hisab --platforms android
 
@@ -27,15 +27,11 @@ workflows:
             sed -i.bak 's/android:label="ashik_hisab"/android:label="আশিক হিসাব"/' android/app/src/main/AndroidManifest.xml
           fi
 
-          # compileSdk ভার্সন 36 এ আপডেট করার জন্য build.gradle ফিক্স করা
+          # compileSdk ভার্সন নিশ্চিতভাবে 36 সেট করা
           if [ -f "android/app/build.gradle" ]; then
             sed -i.bak 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 36/g' android/app/build.gradle
             sed -i.bak 's/compileSdk [0-9]*/compileSdk 36/g' android/app/build.gradle
           fi
-
-          # Gradle মেমোরি কনফিগারেশন
-          echo "org.gradle.jvmargs=-Xmx3G -XX:MaxMetaspaceSize=1G" >> android/gradle.properties
-          echo "android.useAndroidX=true" >> android/gradle.properties
 
           flutter pub get
           echo "=== Setup OK ==="
@@ -47,6 +43,12 @@ workflows:
           set -e
           if [ ! -f pubspec.yaml ] && [ -f ashik_hisab/pubspec.yaml ]; then
             cd ashik_hisab
+          fi
+
+          # বিল্ডের আগে পুনরায় compileSdk 36 ফিক্স নিশ্চিত করা
+          if [ -f "android/app/build.gradle" ]; then
+            sed -i.bak 's/compileSdkVersion flutter.compileSdkVersion/compileSdkVersion 36/g' android/app/build.gradle
+            sed -i.bak 's/compileSdk [0-9]*/compileSdk 36/g' android/app/build.gradle
           fi
 
           flutter build apk --release
